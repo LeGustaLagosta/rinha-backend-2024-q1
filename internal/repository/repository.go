@@ -19,7 +19,7 @@ func PersistirCadastroInicial(clientes []model.Cliente) {
 	DB.Create(&clientes)
 }
 
-func ObterCliente(id_cliente int64) (*model.Cliente, error) {
+func ObterCliente(id_cliente uint64) (*model.Cliente, error) {
 	var cliente model.Cliente
 
 	err := DB.First(&cliente, "id = ?", id_cliente).Error
@@ -30,6 +30,12 @@ func ObterCliente(id_cliente int64) (*model.Cliente, error) {
 	return &cliente, nil
 }
 
-func inserirTransacao(transacao model.Transacao) {
+func InserirTransacao(transacao *model.Transacao) error {
+	result := DB.Create(transacao)
 
+	if result.Error != nil{
+		return errors.New("erro ao cadastrar transação")
+	}
+
+	return nil
 }
