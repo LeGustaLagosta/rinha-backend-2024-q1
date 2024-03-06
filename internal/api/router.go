@@ -6,7 +6,7 @@ import (
 
 func GetRouter() *gin.Engine {
 	router := gin.Default()
-	router.GET("/clientes/:id/extrato", getCliente)
+	router.GET("/clientes/:id/extrato", getExtrato)
 	router.POST("/clientes/:id/transacoes", postTransacao)
 
 	return router

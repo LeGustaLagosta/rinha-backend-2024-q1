@@ -48,3 +48,14 @@ func InserirTransacao(transacao *model.Transacao, cliente *model.Cliente) error 
 
 	return tx.Commit().Error
 }
+
+func ObterTransacoes(id_cliente int64) (*[]model.Transacao, error) {
+	var transacoes []model.Transacao
+
+	err := DB.Limit(10).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, errors.New("cliente não encontrado")
+	}
+
+	return &transacoes, nil
+}

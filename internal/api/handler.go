@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -10,21 +11,29 @@ import (
 	"rinha/internal/repository"
 )
 
-func getCliente(c *gin.Context) {
+func getExtrato(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-
 	if err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"mensagem": "id inválido"})
+		c.IndentedJSON(404, gin.H{"mensagem": "cliente não encontrado"})
 		return
 	}
 
 	cliente, err := repository.ObterCliente(id)
 	if err != nil {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"mensagem": err.Error()})
+		c.IndentedJSON(404, gin.H{"mensagem": "cliente não encontrado"})
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, cliente)
+	transacoes, err := repository.ObterTransacoes(id)
+
+	c.IndentedJSON(http.StatusOK, gin.H{
+		"saldo": gin.H{
+			"total": cliente.Saldo,
+			"data_extrato": time.Now().UTC(),
+			"limite": cliente.Limite,
+		},
+		"ultimas_transacoes": transacoes,
+	})
 }
 
 func postTransacao(c *gin.Context) {
@@ -59,6 +68,7 @@ func postTransacao(c *gin.Context) {
 	}
 
 	cliente.Saldo = novoSaldo
+	transacao.Data = time.Now()
 	
 	err = repository.InserirTransacao(&transacao, cliente)
 	if err != nil {
