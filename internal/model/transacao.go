@@ -5,8 +5,8 @@ import (
 )
 
 type Transacao struct {
-	ID         int64
-	ID_cliente int64
+	ID         int64 `json:"-"`
+	ID_cliente int64 `json:"-"`
 	Valor      int64 `json:"valor" binding:"required,gte=0"`
 	Tipo       string  `json:"tipo" binding:"required,len=1,oneof=c d"`
 	Descricao  string  `json:"descricao" binding:"required,max=10"`

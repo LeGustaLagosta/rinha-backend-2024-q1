@@ -9,7 +9,7 @@ create table transacoes (
     valor numeric,
     tipo varchar(1),
     descricao varchar(20),
-    data_transacao date,
+    data_transacao timestamp,
     id_cliente integer references clientes(id)
 );
 

@@ -25,13 +25,18 @@ func getExtrato(c *gin.Context) {
 	}
 
 	transacoes, err := repository.ObterTransacoes(id)
+	if err != nil {
+		c.IndentedJSON(404, gin.H{"mensagem": "transações não encontradas"})
+		return
+	}
 
+	saldo := &model.Saldo{
+		Total: cliente.Saldo,
+		Data_extrato: time.Now().UTC(),
+		Limite: cliente.Limite,
+	}
 	c.IndentedJSON(http.StatusOK, gin.H{
-		"saldo": gin.H{
-			"total": cliente.Saldo,
-			"data_extrato": time.Now().UTC(),
-			"limite": cliente.Limite,
-		},
+		"saldo": saldo,
 		"ultimas_transacoes": transacoes,
 	})
 }
@@ -72,7 +77,7 @@ func postTransacao(c *gin.Context) {
 	
 	err = repository.InserirTransacao(&transacao, cliente)
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"mensagem": err.Error()})
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"mensagem": "transação não registrada: " + err.Error()})
 		return
 	}
 
