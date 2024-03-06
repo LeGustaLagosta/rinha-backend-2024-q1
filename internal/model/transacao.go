@@ -7,3 +7,7 @@ type Transacao struct {
 	Tipo       string  `json:"tipo"`
 	Descricao  string  `json:"descricao"`
 }
+
+func (Transacao) TableName() string {
+    return "transacoes"
+}

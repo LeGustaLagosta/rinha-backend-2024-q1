@@ -14,11 +14,6 @@ func InitDB(db *gorm.DB) {
 	DB = db
 }
 
-func PersistirCadastroInicial(clientes []model.Cliente) {
-    DB.AutoMigrate(&model.Cliente{}, &model.Transacao{})
-	DB.Create(&clientes)
-}
-
 func ObterCliente(id_cliente uint64) (*model.Cliente, error) {
 	var cliente model.Cliente
 
