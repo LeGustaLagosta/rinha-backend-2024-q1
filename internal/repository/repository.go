@@ -14,7 +14,7 @@ func InitDB(db *gorm.DB) {
 	DB = db
 }
 
-func ObterCliente(id_cliente uint64) (*model.Cliente, error) {
+func ObterCliente(id_cliente int64) (*model.Cliente, error) {
 	var cliente model.Cliente
 
 	err := DB.First(&cliente, "id = ?", id_cliente).Error
@@ -25,12 +25,26 @@ func ObterCliente(id_cliente uint64) (*model.Cliente, error) {
 	return &cliente, nil
 }
 
-func InserirTransacao(transacao *model.Transacao) error {
-	result := DB.Create(transacao)
+func InserirTransacao(transacao *model.Transacao, cliente *model.Cliente) error {
+	tx := DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
 
-	if result.Error != nil{
-		return errors.New("erro ao cadastrar transação")
+	if err := tx.Error; err != nil {
+		return err
+	}
+	
+	
+	if err := DB.Create(transacao).Error; err != nil{
+		return errors.New("erro ao registrar transação")
 	}
 
-	return nil
+	if err := DB.Save(cliente).Error; err != nil{
+		return errors.New("erro ao atualizar saldo")
+	}
+
+	return tx.Commit().Error
 }

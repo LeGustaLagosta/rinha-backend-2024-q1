@@ -1,11 +1,11 @@
 package model
 
 type Transacao struct {
-	ID         uint64
-	ID_cliente uint64
-	Valor      float32 `json:"valor"`
-	Tipo       string  `json:"tipo"`
-	Descricao  string  `json:"descricao"`
+	ID         int64
+	ID_cliente int64
+	Valor      int64 `json:"valor" binding:"required,gte=0"`
+	Tipo       string  `json:"tipo" binding:"required,len=1,oneof=c d"`
+	Descricao  string  `json:"descricao" binding:"required,max=10"`
 }
 
 func (Transacao) TableName() string {

@@ -1,7 +1,7 @@
 package model
 
 type Cliente struct {
-	ID     uint64
-	Limite float32 `json:"limite"`
-	Saldo  float32 `json:"saldo"`
+	ID     int64
+	Limite int64 `json:"limite"`
+	Saldo  int64 `json:"saldo"`
 }
