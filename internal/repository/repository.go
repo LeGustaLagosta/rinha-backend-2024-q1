@@ -52,7 +52,7 @@ func InserirTransacao(transacao *model.Transacao, cliente *model.Cliente) error 
 func ObterTransacoes(id_cliente int64) (*[]model.Transacao, error) {
 	var transacoes []model.Transacao
 
-	err := DB.Limit(100).Order("data_transacao desc").Where("id_cliente = ?", id_cliente).Find(&transacoes).Error
+	err := DB.Limit(10).Order("data_transacao desc").Where("id_cliente = ?", id_cliente).Find(&transacoes).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, errors.New("transações não encontradas")
 	}
