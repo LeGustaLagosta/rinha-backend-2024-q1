@@ -17,7 +17,10 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix nocgo -o app ./cmd/main.go
 
 # Start a new stage from scratch
-FROM alpine:latest  
+FROM alpine:latest
+
+# Set necessary environment variables
+ENV GIN_MODE=release
 
 WORKDIR /root/
 
