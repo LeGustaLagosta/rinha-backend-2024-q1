@@ -20,13 +20,14 @@ func CloseDB() {
 func ObterCliente(id_cliente int64) (*model.Cliente, error) {
 	var cliente model.Cliente
 
-	stmt, err := DB.Prepare("select * from clientes where id = $1")
-	if err != nil {
-		return nil, errors.New("erro de statement")
-	}
-	defer stmt.Close()
+	// stmt, err := DB.Prepare("select * from clientes where id = $1")
+	// if err != nil {
+	// 	return nil, errors.New("erro de statement")
+	// }
+	// defer stmt.Close()
 
-	err = stmt.QueryRow(id_cliente).Scan(&cliente.ID, &cliente.Limite, &cliente.Saldo)
+	// err = stmt.QueryRow(id_cliente).Scan(&cliente.ID, &cliente.Limite, &cliente.Saldo)
+	err := DB.QueryRow("select clientes.id, limite, sum(case when tipo = 'c' then coalesce(valor, 0) else coalesce(-valor, 0) end) saldo from clientes left join transacoes on transacoes.id_cliente = clientes.id where clientes.id = $1 group by clientes.id, limite", id_cliente).Scan(&cliente.ID, &cliente.Limite, &cliente.Saldo)
 	if err != nil {
 		return nil, errors.New("erro de queryrow")
 	}
@@ -66,22 +67,23 @@ func InserirTransacao(transacao *model.Transacao, cliente *model.Cliente) error 
 	return nil
 }
 
-func ObterTransacoes(id_cliente int64) (*[]model.Transacao, error) {
-	var transacoes []model.Transacao
+func ObterTransacoes(id_cliente int64) ([]*model.Transacao, error) {
+	var transacoes []*model.Transacao
 
-	stmt, err := DB.Prepare("select * from transacoes where id_cliente = $1 order by data_transacao desc limit 10")
-	if err != nil {
-		return nil, errors.New("erro de statement")
-	}
-	defer stmt.Close()
+	// stmt, err := DB.Prepare("select * from transacoes where id_cliente = $1 order by data_transacao desc limit 10")
+	// if err != nil {
+	// 	return nil, errors.New("erro de statement")
+	// }
+	// defer stmt.Close()
 
-	rows, err := stmt.Query(id_cliente)
+	// rows, err := stmt.Query(id_cliente)
+	rows, err := DB.Query("select * from transacoes where id_cliente = $1 order by data_transacao desc limit 10", id_cliente)
 	if err != nil {
 		return nil, errors.New("erro de query")
 	}
 
 	for rows.Next() {
-		var transacao model.Transacao
+		transacao := &model.Transacao{}
 		err = rows.Scan(&transacao.ID, &transacao.Valor, &transacao.Tipo, &transacao.Descricao, &transacao.Data, &transacao.ID_cliente)
 		if err != nil {
 			return nil, errors.New("erro de scan")
@@ -89,5 +91,9 @@ func ObterTransacoes(id_cliente int64) (*[]model.Transacao, error) {
 		transacoes = append(transacoes, transacao)
 	}
 
-	return &transacoes, nil
+	if len(transacoes) == 0 {
+		return []*model.Transacao{}, nil
+	}
+
+	return transacoes, nil
 }
