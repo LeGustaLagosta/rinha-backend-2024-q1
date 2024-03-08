@@ -18,7 +18,7 @@ func ObterCliente(id_cliente int64) (*model.Cliente, error) {
 	var cliente model.Cliente
 
 	err := DB.First(&cliente, "id = ?", id_cliente).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
+	if err != nil {
 		return nil, errors.New("cliente não encontrado")
 	}
 
@@ -53,7 +53,7 @@ func ObterTransacoes(id_cliente int64) (*[]model.Transacao, error) {
 	var transacoes []model.Transacao
 
 	err := DB.Limit(10).Order("data_transacao desc").Where("id_cliente = ?", id_cliente).Find(&transacoes).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
+	if err != nil {
 		return nil, errors.New("transações não encontradas")
 	}
 
