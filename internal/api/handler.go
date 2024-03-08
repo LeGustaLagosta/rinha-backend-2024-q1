@@ -14,19 +14,19 @@ import (
 func getExtrato(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		c.IndentedJSON(404, gin.H{"mensagem": "cliente não encontrado"})
+		c.IndentedJSON(404, gin.H{"mensagem": "cliente não encontrado: id inválido"})
 		return
 	}
 
 	cliente, err := repository.ObterCliente(id)
 	if err != nil {
-		c.IndentedJSON(404, gin.H{"mensagem": "cliente não encontrado"})
+		c.IndentedJSON(404, gin.H{"mensagem": "cliente não encontrado: " + err.Error()})
 		return
 	}
 
 	transacoes, err := repository.ObterTransacoes(id)
 	if err != nil {
-		c.IndentedJSON(404, gin.H{"mensagem": "transações não encontradas"})
+		c.IndentedJSON(404, gin.H{"mensagem": "transações não encontradas: " + err.Error()})
 		return
 	}
 
@@ -44,7 +44,7 @@ func getExtrato(c *gin.Context) {
 func postTransacao(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		c.IndentedJSON(404, gin.H{"mensagem": "cliente não encontrado"})
+		c.IndentedJSON(404, gin.H{"mensagem": "cliente não encontrado: id inválido"})
 		return
 	}
 
@@ -57,7 +57,7 @@ func postTransacao(c *gin.Context) {
 	transacao.ID_cliente = id
 	cliente, err := repository.ObterCliente(id)
 	if err != nil {
-		c.IndentedJSON(404, gin.H{"mensagem": "cliente não encontrado"})
+		c.IndentedJSON(404, gin.H{"mensagem": "cliente não encontrado: " + err.Error()})
 		return
 	}
 
