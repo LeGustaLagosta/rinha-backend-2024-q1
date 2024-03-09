@@ -11,6 +11,12 @@ import (
 var DB *sql.DB
 func InitDB(db *sql.DB) {
 	DB = db
+
+	// Set maximum idle connections to optimize connection pooling
+	DB.SetMaxIdleConns(20)
+
+	// Set maximum open connections to optimize concurrency
+	DB.SetMaxOpenConns(50)
 }
 
 func CloseDB() {
@@ -36,33 +42,42 @@ func ObterCliente(id_cliente int64) (*model.Cliente, error) {
 }
 
 func InserirTransacao(transacao *model.Transacao, cliente *model.Cliente) error {
-	tx, err := DB.Begin()
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
+	// tx, err := DB.Begin()
+	// if err != nil {
+	// 	return err
+	// }
+	// defer tx.Rollback()
 
-	stmt, err := tx.Prepare("insert into transacoes(id_cliente, valor, tipo, descricao, data_transacao) values ($1, $2, $3, $4, $5)")
+	// stmt, err := tx.Prepare("insert into transacoes(id_cliente, valor, tipo, descricao, data_transacao) values ($1, $2, $3, $4, $5)")
+	// if err != nil {
+	// 	return errors.New("erro de statement insert")
+	// }
+	// if _, err := stmt.Exec(transacao.ID_cliente, transacao.Valor, transacao.Tipo, transacao.Descricao, transacao.Data); err != nil{
+	// 	_ = tx.Rollback()
+	// 	return errors.New("erro de exec")
+	// }
+	// stmt.Close()
+
+	// stmt, err = tx.Prepare("update clientes set saldo = $1 where id = $2")
+	// if err != nil {
+	// 	return errors.New("erro de statement update")
+	// }
+	// if _, err := stmt.Exec(cliente.Saldo, transacao.ID_cliente); err != nil{
+	// 	_ = tx.Rollback()
+	// 	return errors.New("erro de exec")
+	// }
+	// stmt.Close()
+	
+	// tx.Commit()
+
+	stmt, err := DB.Prepare("insert into transacoes(id_cliente, valor, tipo, descricao, data_transacao) values ($1, $2, $3, $4, $5)")
 	if err != nil {
 		return errors.New("erro de statement insert")
 	}
+	defer stmt.Close()
 	if _, err := stmt.Exec(transacao.ID_cliente, transacao.Valor, transacao.Tipo, transacao.Descricao, transacao.Data); err != nil{
-		_ = tx.Rollback()
 		return errors.New("erro de exec")
 	}
-	stmt.Close()
-
-	stmt, err = tx.Prepare("update clientes set saldo = $1 where id = $2")
-	if err != nil {
-		return errors.New("erro de statement update")
-	}
-	if _, err := stmt.Exec(cliente.Saldo, transacao.ID_cliente); err != nil{
-		_ = tx.Rollback()
-		return errors.New("erro de exec")
-	}
-	stmt.Close()
-	
-	tx.Commit()
 
 	return nil
 }
@@ -81,6 +96,7 @@ func ObterTransacoes(id_cliente int64) ([]*model.Transacao, error) {
 	if err != nil {
 		return nil, errors.New("erro de query")
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		transacao := &model.Transacao{}

@@ -81,5 +81,5 @@ func postTransacao(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, gin.H{"mensagem": "transação registrada"})
+	c.IndentedJSON(http.StatusOK, gin.H{"limite": cliente.Limite, "saldo": cliente.Saldo})
 }
