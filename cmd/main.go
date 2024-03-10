@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"net/http"
 	"os"
 	
 	"database/sql"
@@ -26,6 +28,7 @@ func main() {
 	repository.InitDB(DB)
 	defer repository.CloseDB()
 
-	router := api.GetRouter()
-	router.Run(":8080")
+	http.HandleFunc("/clientes/", api.RouteClientes)
+	log.Println("Listening on port 8080")
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
