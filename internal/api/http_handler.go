@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"rinha/internal/model"
 	"rinha/internal/repository"
@@ -85,6 +86,22 @@ func PostTransacao(w http.ResponseWriter, r *http.Request) {
 	var transacao model.Transacao
 	if err := json.NewDecoder(r.Body).Decode(&transacao); err != nil {
 		sendJSONResponse(w, 422, Mensagem_Erro{Mensagem: "transação inválida: " + err.Error()})
+		return
+	}
+
+	// validar regras
+	if transacao.Valor < 0 {
+		sendJSONResponse(w, 422, Mensagem_Erro{Mensagem: "transação inválida: valor não pode ser negativo"})
+		return
+	}
+
+	if transacao.Tipo != "c" && transacao.Tipo != "d" {
+		sendJSONResponse(w, 422, Mensagem_Erro{Mensagem: "transação inválida: tipo diferente de c ou d"})
+		return
+	}
+
+	if utf8.RuneCountInString(transacao.Descricao) > 10 {
+		sendJSONResponse(w, 422, Mensagem_Erro{Mensagem: "transação inválida: descrição maior do que 10 caracteres"})
 		return
 	}
 
