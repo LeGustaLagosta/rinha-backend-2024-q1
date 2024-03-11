@@ -2,60 +2,114 @@ package repository
 
 import (
 	"errors"
-
-	"gorm.io/gorm"
+	"database/sql"
+	_ "github.com/lib/pq"
 
 	"rinha/internal/model"
 )
 
-var DB *gorm.DB
-
-func InitDB(db *gorm.DB) {
+var DB *sql.DB
+func InitDB(db *sql.DB) {
 	DB = db
+
+	// Set maximum idle connections to optimize connection pooling
+	DB.SetMaxIdleConns(20)
+
+	// Set maximum open connections to optimize concurrency
+	DB.SetMaxOpenConns(50)
+}
+
+func CloseDB() {
+	DB.Close()
 }
 
 func ObterCliente(id_cliente int64) (*model.Cliente, error) {
 	var cliente model.Cliente
 
-	err := DB.First(&cliente, "id = ?", id_cliente).Error
+	// stmt, err := DB.Prepare("select * from clientes where id = $1")
+	// if err != nil {
+	// 	return nil, errors.New("erro de statement")
+	// }
+	// defer stmt.Close()
+
+	// err = stmt.QueryRow(id_cliente).Scan(&cliente.ID, &cliente.Limite, &cliente.Saldo)
+	err := DB.QueryRow("select clientes.id, limite, sum(case when tipo = 'c' then coalesce(valor, 0) else coalesce(-valor, 0) end) saldo from clientes left join transacoes on transacoes.id_cliente = clientes.id where clientes.id = $1 group by clientes.id, limite", id_cliente).Scan(&cliente.ID, &cliente.Limite, &cliente.Saldo)
 	if err != nil {
-		return nil, errors.New("cliente não encontrado")
+		return nil, errors.New("erro de queryrow")
 	}
 
 	return &cliente, nil
 }
 
 func InserirTransacao(transacao *model.Transacao, cliente *model.Cliente) error {
-	tx := DB.Begin()
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-		}
-	}()
+	// tx, err := DB.Begin()
+	// if err != nil {
+	// 	return err
+	// }
+	// defer tx.Rollback()
 
-	if err := tx.Error; err != nil {
-		return err
-	}
+	// stmt, err := tx.Prepare("insert into transacoes(id_cliente, valor, tipo, descricao, data_transacao) values ($1, $2, $3, $4, $5)")
+	// if err != nil {
+	// 	return errors.New("erro de statement insert")
+	// }
+	// if _, err := stmt.Exec(transacao.ID_cliente, transacao.Valor, transacao.Tipo, transacao.Descricao, transacao.Data); err != nil{
+	// 	_ = tx.Rollback()
+	// 	return errors.New("erro de exec")
+	// }
+	// stmt.Close()
+
+	// stmt, err = tx.Prepare("update clientes set saldo = $1 where id = $2")
+	// if err != nil {
+	// 	return errors.New("erro de statement update")
+	// }
+	// if _, err := stmt.Exec(cliente.Saldo, transacao.ID_cliente); err != nil{
+	// 	_ = tx.Rollback()
+	// 	return errors.New("erro de exec")
+	// }
+	// stmt.Close()
 	
-	
-	if err := DB.Create(transacao).Error; err != nil{
-		return errors.New("erro ao registrar transação")
+	// tx.Commit()
+
+	stmt, err := DB.Prepare("insert into transacoes(id_cliente, valor, tipo, descricao, data_transacao) values ($1, $2, $3, $4, $5)")
+	if err != nil {
+		return errors.New("erro de statement insert")
+	}
+	defer stmt.Close()
+	if _, err := stmt.Exec(transacao.ID_cliente, transacao.Valor, transacao.Tipo, transacao.Descricao, transacao.Data); err != nil{
+		return errors.New("erro de exec")
 	}
 
-	if err := DB.Save(cliente).Error; err != nil{
-		return errors.New("erro ao atualizar saldo")
-	}
-
-	return tx.Commit().Error
+	return nil
 }
 
-func ObterTransacoes(id_cliente int64) (*[]model.Transacao, error) {
-	var transacoes []model.Transacao
+func ObterTransacoes(id_cliente int64) ([]*model.Transacao, error) {
+	var transacoes []*model.Transacao
 
-	err := DB.Limit(10).Order("data_transacao desc").Where("id_cliente = ?", id_cliente).Find(&transacoes).Error
+	// stmt, err := DB.Prepare("select * from transacoes where id_cliente = $1 order by data_transacao desc limit 10")
+	// if err != nil {
+	// 	return nil, errors.New("erro de statement")
+	// }
+	// defer stmt.Close()
+
+	// rows, err := stmt.Query(id_cliente)
+	rows, err := DB.Query("select * from transacoes where id_cliente = $1 order by data_transacao desc limit 10", id_cliente)
 	if err != nil {
-		return nil, errors.New("transações não encontradas")
+		return nil, errors.New("erro de query")
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		transacao := &model.Transacao{}
+		err = rows.Scan(&transacao.ID, &transacao.Valor, &transacao.Tipo, &transacao.Descricao, &transacao.Data, &transacao.ID_cliente)
+		if err != nil {
+			return nil, errors.New("erro de scan")
+		}
+		transacoes = append(transacoes, transacao)
 	}
 
-	return &transacoes, nil
+	if len(transacoes) == 0 {
+		return []*model.Transacao{}, nil
+	}
+
+	return transacoes, nil
 }

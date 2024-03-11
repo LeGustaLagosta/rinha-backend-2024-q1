@@ -20,5 +20,3 @@ insert into clientes (limite, saldo) values (80000, 0);
 insert into clientes (limite, saldo) values (1000000, 0);
 insert into clientes (limite, saldo) values (10000000, 0);
 insert into clientes (limite, saldo) values (500000, 0);
-
-alter system set max_connections = 1000;
