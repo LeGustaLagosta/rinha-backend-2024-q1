@@ -2,7 +2,7 @@
 
 - nome: 
 - tecnologias:
-    - go (com gin e gorm)
+    - go (pq e net/http)
     - postgresql
     - nginx
 - repositório: https://github.com/LeGustaLagosta/rinha-backend-2024-q1
